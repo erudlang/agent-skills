@@ -36,7 +36,9 @@ A file can only be Global Config Change in addition to Production Code; Document
 
 ```mermaid
 graph TD
-    A[Start] --> B{Are there changes to global config?}
+    A[Start] --> G{Are all changed files Documentation?}
+    G -->|All Documentation| G1[Need review]
+    G -->|Not All Documentation| B{Are there changes to global config?}
     B -->|Global Config Changes| B1[Need Review]
     B -->|No Global Config Changes| C{Is this a regression?}
     C -->|Non-Regression| D{Are functional and non-functional quality criteria met?}
@@ -49,15 +51,14 @@ graph TD
     E -->|Functional| V[Need review]
 ```
 
-- All changed files are Documentation → **Merge**.
-- Otherwise, a Global Config Change anywhere in the diff → **Need review**.
+- a Global Config Change anywhere in the diff → **Need review**.
 - Otherwise, determine **Regression**: does the diff modify or delete at least one line in a file that existed before this PR? (Any such line counts, regardless of test coverage — do not use PR title/intent for this call.) Purely new files / purely additive changes → **Non-Regression**.
 - If Regression: does it contain functional changes (changes to business logic/behavior), or is it only non-functional (e.g. formatting, comments, perf tuning that doesn't alter business rules)? Functional → **Need review**. Only-non-functional → continue to the criteria check.
 - If Non-Regression, or Regression-only-non-functional: continue to the criteria check (step 4).
 
 ### 4. Score Quality Criteria
 
-Always compute this step when step 3 reached a criteria-check node (F or H) — the score decides Merge vs. Need review, and (together with step 5) Medium vs. High. Score each criterion 0 (no breach) to 3 (severe breach), by your own judgment reading the diff and any tests:
+Always compute this step when step 3 reached a criteria-check node (D or F) — the score decides Merge vs. Need review, and (together with step 5) Medium vs. High. Score each criterion 0 (no breach) to 3 (severe breach), by your own judgment reading the diff and any tests:
 
 **Non-Functional Quality criteria:**
 
@@ -83,7 +84,7 @@ All five are equally weighted — no criterion is inherently more severe than an
 ### 5. Determine Criticality
 
 - Step 3 said **Merge** → **Low**.
-- Step 3 said **Need review** → **High** if it touches a critical path (criterion 5 scored 3) or any other criterion scored 3, otherwise **Medium**. A Need review reached directly via Global Config Change (node C1) or via a functional regression (node V) with no critical-path involvement is **Medium** unless a critical path is also present.
+- Step 3 said **Need review** → **High** if it touches a critical path (criterion 5 scored 3) or any other criterion scored 3, otherwise **Medium**. A Need review reached directly via the Documentation-only anomaly (node G1), Global Config Change (node B1), or a functional regression (node V) with no critical-path involvement is **Medium** unless a critical path is also present.
 
 Low is never assigned when step 3 said Need review, regardless of scores: the tree's structural verdict is the authority on mergeability; scoring only grades severity among Need-review outcomes.
 
